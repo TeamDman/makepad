@@ -8,6 +8,7 @@ workspace.members = [
     "examples/widgets",
     "examples/chatgpt",
     "examples/comfyui",
+    "examples/egg",
 #    "libs/futures",
 #    "libs/wasm_bridge/test",
     "studio",
