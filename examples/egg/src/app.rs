@@ -1,530 +1,175 @@
-use crate::{
-    makepad_widgets::*,
-    makepad_audio_graph::*,
-    makepad_platform::midi::*,
-    
-    makepad_synth_egg::ironfish::*,
-    makepad_audio_widgets::piano::*,
-    sequencer::*,
-    makepad_audio_widgets::display_audio::*
-};
+use makepad_widgets::*;
 
-//use std::fs::File;
-//use std::io::prelude::*;
+// The live_design macro generates a function that registers a DSL code block with the global
+// context object (`Cx`).
+//
+// DSL code blocks are used in Makepad to facilitate live design. A DSL code block defines
+// structured data that describes the styling of the UI. The Makepad runtime automatically
+// initializes widgets from their corresponding DSL objects. Moreover, external programs (such
+// as a code editor) can notify the Makepad runtime that a DSL code block has been changed, allowing
+// the runtime to automatically update the affected widgets.
 live_design!{
-    import makepad_widgets::frame::*
-    import makepad_widgets::button::Button;
-    import makepad_example_egg::app_desktop::AppDesktop
-    import makepad_example_egg::app_mobile::AppMobile
-    import makepad_widgets::desktop_window::DesktopWindow
-    import makepad_widgets::multi_window::MultiWindow
+    import makepad_widgets::base::*;
+    import makepad_widgets::theme_desktop_dark::*;
     
-    import makepad_audio_graph::mixer::Mixer;
-    import makepad_audio_graph::instrument::Instrument;
-    import makepad_synth_egg::ironfish::IronFish;
-    import makepad_widgets::designer::Designer;
-    import makepad_widgets::slides_view::Slide;
-    import makepad_widgets::slides_view::SlideChapter;
-    import makepad_widgets::slides_view::SlideBody;
-    import makepad_widgets::slides_view::SlidesView;
-    
-    //import makepad_example_fractal_zoom::mandelbrot::Mandelbrot;
-    //import makepad_example_numbers::number_grid::NumberGrid;
-    // APP
-    //ui: <AppMobile> {}
+    // The `{{App}}` syntax is used to inherit a DSL object from a Rust struct. This tells the
+    // Makepad runtime that our DSL object corresponds to a Rust struct named `App`. Whenever an
+    // instance of `App` is initialized, the Makepad runtime will obtain its initial values from
+    // this DSL object.
     App = {{App}} {
-        
-        audio_graph: {
-            root: <Mixer> {
-                c1 = <Instrument> {
-                    <IronFish> {}
-                }
-            }
-        }
-        ui: <DesktopWindow> {
-            window: {inner_size: vec2(1280, 1000), dpi_override:2},
-            pass: {clear_color: #2A}
-            block_signal_event: true; 
-            <AppDesktop> {}
-        }
-        
-        
-        ui= <MultiWindow> {
-            mobile =<DesktopWindow> {
-                window: {inner_size: vec2(1280, 1000), dpi_override:2},
-                pass: {clear_color: #2A}
-                block_signal_event: true; 
-                <AppDesktop> {}
-            }
-            <DesktopWindow> {
-                window: {position: vec2(0, 400), inner_size: vec2(800, 800)},
-                pass: {clear_color: #2A}
-                block_signal_event: true;
-                layout: {padding: {top: 30}},
-                <Designer> {}
-            }
-            <DesktopWindow> {
-                window: {position: vec2(0, 0), inner_size: vec2(400, 800)},
-                pass: {clear_color: #2A}
-                block_signal_event: true; 
-                <AppMobile> {}
-            }
-        }
-/*
-        ui=<DesktopWindow> {
-            window: {inner_size: vec2(1920, 1080)},
+        // The `ui` field on the struct `App` defines a frame widget. Views are used as containers
+        // for other widgets. Since the `ui` property on the DSL object `App` corresponds with the
+        // `ui` field on the Rust struct `App`, the latter will be initialized from the DSL object
+        // here below.
+        ui: <DesktopWindow>{
+            show_bg: true
+            width: Fill,
+            height: Fill
             
-            pass: {clear_color: #2A}
-            block_signal_event: true; 
-            <SlidesView> {
-                goal_pos: 0.0
+            draw_bg: {
                 
-                <SlideChapter> {
-                    title = {label: "MAKEPAD.\nDESIGNING MODERN\nUIs FOR RUST."},
-                    <SlideBody> {label: "Rik Arends\n"}
-                }
-                <Slide> {
-                    title = {label: "A long long time ago …"},
-                    <SlideBody> {label: "… in a galaxy nearby\n   Cloud9 IDE & ACE"}
-                }
-                <Slide> {
-                    title = {label: "HTML as an IDE UI?\nMadness!"},
-                    <SlideBody> {label: "- Integrating design and code was hard\n- Could not innovate editing\n- Too slow, too hard to control"}
-                }
-                <Slide> {
-                    title = {label: "Let's start over!"},
-                    <SlideBody> {label: "- JavaScript and WebGL for UI\n- Write shaders to style UI\n- A quick demo"}
-                }
-                <Slide> {
-                    title = {label: "Maybe JavaScript\nwas the problem?"},
-                    <SlideBody> {label: "- Great livecoding, but …\n- Chrome crashing tabs after 30 minutes\n- Too slow"}
-                }
-                <Slide> {
-                    title = {label: "Rust appears"},
-                    <SlideBody> {label: "- Let's try again: Native + Wasm\n- Makepad in Rust\n- Startup with Eddy and Sebastian"}
-                }
-                <Slide> {title = {label: "Rust is fast: SIMD Mandelbrot"}, 
-                    layout: {align: {x: 0.0, y: 0.5}, flow: Down, spacing: 10, padding: 50}
-                    draw_bg: { color: #x1A, radius: 5.0 }
-                    <Frame>{
-                        layout:{padding: 0, align:{x:0.5}, spacing: 20}
-                        <Box>{
-                            draw_bg: { color: #x2A } 
-                            walk: { margin: 0.0}
-                            layout:{ padding: 0.0 }
-                            <Mandelbrot> {walk:{width:Fill, height:Fill}}
-                        }
-                    }
-                }
-
-                <Slide> {title = {label: "Instanced rendering"}, 
-                    layout: {align: {x: 0.0, y: 0.5}, flow: Down, spacing: 10, padding: 50}
-                    draw_bg: { color: #x1A, radius: 5.0 }
-                    <Frame>{
-                        layout:{padding: 0, align:{x:0.5}, spacing: 20}
-                        <Box>{
-                            draw_bg: { color: #x2A }
-                            walk: { margin: 0.0}
-                            layout:{ padding: 0.0 }
-                            <NumberGrid> {walk:{width:Fill, height:Fill}}
-                        }
-                    }
-                }
                 
-                <Slide> {
-                    title = {label: "Our goal:\nUnify coding and UI design again."},
-                    <SlideBody> {label: "As it was in Visual Basic.\nNow with modern design."}
+                // The `fn pixel(self) -> vec4` syntax is used to define a property named `pixel`,
+                // the value of which is a shader. We use our own custom DSL to define shaders. It's
+                // syntax is *mostly* compatible with GLSL, although there are some differences as
+                // well.
+                fn pixel(self) -> vec4 {
+                    // Within a shader, the `self.pos` syntax is used to access the `pos` varying.
+                    // this is a clipped version of geom_pos that ranges from 0,0..1,1 top-left..bottom-right 
+                    // over the quad
+                    return mix(#7, #3, self.pos.y);
                 }
-
-                <Slide> {title = {label: "Ironfish Desktop"}, 
-                    <Box>{
-                        draw_bg: { color: #x2A }
-                        walk: { margin: 10.0, width: 1600 }
-                        layout:{ padding: 0.0 }
-                        <AppDesktop> {}
-                    }
-                }
-                
-                <Slide> {title = {label: "Ironfish Mobile"}, 
-                    <Frame>{
-                        layout:{padding: 0, align:{x:0.5}}
-                        walk: { margin: { top: 0 }}
-                        <AppMobile> {walk:{width:400, height: Fill}}
-                    }
-                }
-                
-                <Slide> {title = {label: "Multi modal"}, 
-                    <Frame>{
-                        layout:{padding: 0, align:{x:0.5}, spacing: 20}
-
-                        <AppMobile> {walk:{width:400, height: Fill}}
-
-                        <Box>{
-                            draw_bg: { color: #x2A }
-                            walk: { margin: 0.0}
-                            layout:{ padding: 0.0 }
-                            <AppDesktop> {
-                                walk:{width: Fill, height: Fill}
-                            }
-                        }
-                    }
-                }
-                
-                <Slide> {title = {label: "Visual design"}, 
-                    layout: {align: {x: 0.0, y: 0.5}, flow: Down, spacing: 10, padding: 50}
-                    <Frame>{
-                        layout:{padding: 0, align:{x:0.5}, spacing: 20}
-                        <Box>{
-                            draw_bg: { color: #x2A }
-                            walk: { margin: 0.0}
-                            layout:{ padding: 0.0 }
-                            <AppDesktop> {walk:{width:900}}
-                        }
-
-                        <Box>{
-                            draw_bg: { color: #x2A }
-                            walk: { margin: 0.0}
-                            layout:{ padding: 0.0 }
-                            <Designer> {walk:{width:900}}
-                        } 
-                    }
-                }
-                
-                <Slide> {
-                    title = {label: "Our UI language: Live."},
-                    <SlideBody> {label: "- Live editable\n- Design tool manipulates text\n- Inheritance structure\n- Rust-like module system"}
-                }
-                
-                <Slide> {
-                    title = {label: "These slides are a Makepad app"},
-                    <SlideBody> {label: "- Show source\n"}
-                    <SlideBody> {label: "- Show Rust API\n"}
-                }                
-                
-                <Slide> {
-                    title = {label: "Future"},
-                    <SlideBody> {label: "- Release of 0.4.0 soon\n- Windows, Linux, Mac, Web and Android\n- github.com/makepad/makepad\n- twitter: @rikarends @makepad"}
-                }                
-                
-                <Slide> {
-                    title = {label: "Build for Android"},
-                    <SlideBody> {label: "- SDK installer\n- Cargo makepad android\n"}
-                }                
             }
-        }*/
+            
+            // The `name:` syntax is used to define fields, i.e. properties for which there are
+            // corresponding struct fields. In contrast, the `name =` syntax is used to define
+            // instance properties, i.e. properties for which there are no corresponding struct
+            // fields. Note that fields and instance properties use different namespaces, so you
+            // can have both a field and an instance property with the same name.
+            //
+            // Widgets can hook into the Makepad runtime with custom code and determine for
+            // themselves how they want to handle instance properties. In the case of frame widgets,
+            // they simply iterate over their instance properties, and use them to instantiate their
+            // child widgets.
+            
+            // A button to increment the counter.
+            //
+            // The `<Button>` syntax is used to inherit a DSL object from another DSL object. This
+            // tells the Makepad runtime our DSL object has the same properties as the DSL object
+            // named `Button`, except for the properties defined here below, which override any
+            // existing values.
+            // The `layout` property determines how child widgets are laid out within a frame. In
+            // this case, child widgets flow downward, with 20 pixels of spacing in between them,
+            // and centered horizontally with respect to the entire frame.
+            //
+            // Because the child widgets flow downward, vertical alignment works somewhat
+            // differently. In this case, children are centered vertically with respect to the
+            // remainder of the frame after the previous children have been drawn.
+            <View>{
+                 
+                    flow: Down,
+                    spacing: 20,
+                    align: {
+                        x: 0.5,
+                        y: 0.5
+                    
+                },
+                button1 = <Button> {
+                    draw_icon:{
+                        //svg_file: dep("crate://self/resources/Icon_Redo.svg")
+                        svg_path:"M7399.39,1614.16C7357.53,1615.77 7324.04,1650.26 7324.04,1692.51C7324.04,1702.28 7316.11,1710.22 7306.33,1710.22C7296.56,1710.22 7288.62,1702.28 7288.62,1692.51C7288.62,1630.8 7337.85,1580.49 7399.14,1578.74L7389.04,1569.44C7381,1562.04 7380.49,1549.51 7387.88,1541.47C7395.28,1533.44 7407.81,1532.92 7415.85,1540.32L7461.76,1582.58C7465.88,1586.37 7468.2,1591.73 7468.15,1597.32C7468.1,1602.91 7465.68,1608.23 7461.5,1611.94L7415.59,1652.71C7407.42,1659.97 7394.9,1659.23 7387.65,1651.06C7380.39,1642.89 7381.14,1630.37 7389.3,1623.12L7399.39,1614.16Z"
+                        //path:"M0,0 L20.0,0.0 L20.0,20.0 Z"
+                    }
+                    icon_walk:{margin:{left:10}, width:16,height:Fit}
+                    text: "Click to count"
+                }
+                input1 = <TextInput> {
+                    width: 100, height: 30
+                    text: "Click to count"
+                }
+                
+                // A label to display the counter.
+                label1 = <Label> {
+                    draw_text: {
+                        color: #f
+                    },
+                    text: "Counter: 0"
+                }
+            }
+        }
     }
 }
+
+// This app_main macro generates the code necessary to initialize and run your application.
+//
+// This code is almost always the same between different applications, so it is convenient to use a
+// macro for it. The two main tasks that this code needs to carry out are: initializing both the
+// main application struct (`App`) and the global context object (`Cx`), and setting up event
+// handling. On desktop, this means creating and running our own event loop. On web, this means
+// creating an event handler function that the browser event loop can call into.
 app_main!(App);
 
-pub struct SynthPreset {
-    pub id: LiveId,
-    pub name: String,
-    pub fav: bool,
-}
-
+// The main application struct.
+//
+// The #[derive(Live, LiveHook)] attribute implements a bunch of traits for this struct that enable
+// it to interact with the Makepad runtime. Among other things, this enables the Makepad runtime to
+// initialize the struct from a DSL object.
 #[derive(Live)]
+// This function is used to register any DSL code that you depend on.
+// called automatically by the code we generated with the call to the macro `main_app` above.
 pub struct App {
+    // A chromeless window for our application. Used to contain our frame widget.
+    // A frame widget. Used to contain our button and label.
     #[live] ui: WidgetRef,
-    #[rust] _presets: Vec<SynthPreset>,
-    #[live] audio_graph: AudioGraph,
-    #[rust] midi_input: MidiInput,
+    
+    // The value for our counter.
+    //
+    // The #[rust] attribute here is used to indicate that this field should *not* be initialized
+    // from a DSL object, even when a corresponding property exists.
+    #[rust] counter: usize,
 }
 
 impl LiveHook for App {
     fn before_live_design(cx: &mut Cx) {
-        crate::makepad_audio_widgets::live_design(cx);
-        crate::makepad_audio_graph::live_design(cx);
-        crate::makepad_synth_egg::live_design(cx);
-        crate::sequencer::live_design(cx);
-        crate::app_desktop::live_design(cx);
-        crate::app_mobile::live_design(cx);
-       //makepad_example_fractal_zoom::mandelbrot::live_design(cx);
-        //makepad_example_numbers::number_grid::live_design(cx);
+        crate::makepad_widgets::live_design(cx);
     }
 }
 
-impl App {
+impl App{
+    async fn _do_network_request(_cx:CxRef, _ui:WidgetRef, _url:&str)->String{
+        //let x = fetch(urL).await;
+        //ui.get_label(id!(thing)).set_text(&mut *cx.borrow_mut(), x);
+        "".to_string()
+    }
+}
+
+impl AppMain for App{
     
-    pub fn data_bind(&mut self, mut db: DataBindingMap) {
-        // sequencer
-        db.bind(id!(sequencer.playing), ids!(playpause.checkbox));
-        db.bind(id!(sequencer.bpm), ids!(speed.slider));
-        db.bind(id!(sequencer.rootnote), ids!(rootnote.dropdown));
-        db.bind(id!(sequencer.scale), ids!(scaletype.dropdown));
-        db.bind(id!(arp.enabled), ids!(arp.checkbox));
-        //db.bind(id!(arp.octaves), ids!(arp.octaves.slider));
-        
-        // Mixer panel
-        db.bind(id!(osc_balance), ids!(balance.slider));
-        db.bind(id!(noise), ids!(noise.slider));
-        db.bind(id!(sub_osc), ids!(sub.slider));
-        db.bind(id!(portamento), ids!(porta.slider));
-        
-        // DelayFX Panel
-        db.bind(id!(delay.delaysend), ids!(delaysend.slider));
-        db.bind(id!(delay.delayfeedback), ids!(delayfeedback.slider));
-        
-        db.bind(id!(bitcrush.enable), ids!(crushenable.checkbox));
-        db.bind(id!(bitcrush.amount), ids!(crushamount.slider));
-        
-        db.bind(id!(delay.difference), ids!(delaydifference.slider));
-        db.bind(id!(delay.cross), ids!(delaycross.slider));
-        
-        // Chorus panel
-        db.bind(id!(chorus.mix), ids!(chorusmix.slider));
-        db.bind(id!(chorus.mindelay), ids!(chorusdelay.slider));
-        db.bind(id!(chorus.moddepth), ids!(chorusmod.slider));
-        db.bind(id!(chorus.rate), ids!(chorusrate.slider));
-        db.bind(id!(chorus.phasediff), ids!(chorusphase.slider));
-        db.bind(id!(chorus.feedback), ids!(chorusfeedback.slider));
-        
-        // Reverb panel
-        db.bind(id!(reverb.mix), ids!(reverbmix.slider));
-        db.bind(id!(reverb.feedback), ids!(reverbfeedback.slider));
-        
-        //LFO Panel
-        db.bind(id!(lfo.rate), ids!(rate.slider));
-        db.bind(id!(filter1.lfo_amount), ids!(lfoamount.slider));
-        db.bind(id!(lfo.synconkey), ids!(sync.checkbox));
-        
-        //Volume Envelope
-        db.bind(id!(volume_envelope.a), ids!(vol_env.attack.slider));
-        db.bind(id!(volume_envelope.h), ids!(vol_env.hold.slider));
-        db.bind(id!(volume_envelope.d), ids!(vol_env.decay.slider));
-        db.bind(id!(volume_envelope.s), ids!(vol_env.sustain.slider));
-        db.bind(id!(volume_envelope.r), ids!(vol_env.release.slider));
-        
-        //Mod Envelope
-        db.bind(id!(mod_envelope.a), ids!(mod_env.attack.slider));
-        db.bind(id!(mod_envelope.h), ids!(mod_env.hold.slider));
-        db.bind(id!(mod_envelope.d), ids!(mod_env.decay.slider));
-        db.bind(id!(mod_envelope.s), ids!(mod_env.sustain.slider));
-        db.bind(id!(mod_envelope.r), ids!(mod_env.release.slider));
-        db.bind(id!(filter1.envelope_amount), ids!(modamount.slider));
-        
-        // Filter panel
-        //db.bind(id!(filter1.filter_type), ids!(filter_type.dropdown));
-        db.bind(id!(filter1.cutoff), ids!(cutoff.slider));
-        db.bind(id!(filter1.resonance), ids!(resonance.slider));
-        
-        // Osc1 panel
-        db.bind(id!(supersaw1.spread), ids!(osc1.supersaw.spread.slider));
-        db.bind(id!(supersaw1.diffuse), ids!(osc1.supersaw.diffuse.slider));
-        db.bind(id!(supersaw1.spread), ids!(osc1.supersaw.spread.slider));
-        db.bind(id!(supersaw1.diffuse), ids!(osc1.supersaw.diffuse.slider));
-        db.bind(id!(supersaw1.spread), ids!(osc1.hypersaw.spread.slider));
-        db.bind(id!(supersaw1.diffuse), ids!(osc1.hypersaw.diffuse.slider));
-        
-        db.bind(id!(osc1.osc_type), ids!(osc1.type.dropdown));
-        db.bind(id!(osc1.transpose), ids!(osc1.transpose.slider));
-        db.bind(id!(osc1.detune), ids!(osc1.detune.slider));
-        db.bind(id!(osc1.harmonic), ids!(osc1.harmonicshift.slider));
-        db.bind(id!(osc1.harmonicenv), ids!(osc1.harmonicenv.slider));
-        db.bind(id!(osc1.harmoniclfo), ids!(osc1.harmoniclfo.slider));
-        
-        // Osc2 panel
-        db.bind(id!(supersaw1.spread), ids!(osc2.supersaw.spread.slider));
-        db.bind(id!(supersaw1.diffuse), ids!(osc2.supersaw.diffuse.slider));
-        db.bind(id!(supersaw2.spread), ids!(osc2.supersaw.spread.slider));
-        db.bind(id!(supersaw2.diffuse), ids!(osc2.supersaw.diffuse.slider));
-        db.bind(id!(supersaw2.spread), ids!(osc2.hypersaw.spread.slider));
-        db.bind(id!(supersaw2.diffuse), ids!(osc2.hypersaw.diffuse.slider));
-        
-        db.bind(id!(osc2.osc_type), ids!(osc2.type.dropdown));
-        db.bind(id!(osc2.transpose), ids!(osc2.transpose.slider));
-        db.bind(id!(osc2.detune), ids!(osc2.detune.slider));
-        db.bind(id!(osc2.harmonic), ids!(osc2.harmonicshift.slider));
-        db.bind(id!(osc2.harmonicenv), ids!(osc2.harmonicenv.slider));
-        db.bind(id!(osc2.harmoniclfo), ids!(osc2.harmoniclfo.slider));
-        
-        // sequencer
-        db.bind(id!(sequencer.steps), ids!(sequencer));
-        
-        db.apply(id!(osc1.osc_type), ids!(osc1.supersaw, visible), | v | v.enum_eq(id!(SuperSaw)));
-        db.apply(id!(osc2.osc_type), ids!(osc2.supersaw, visible), | v | v.enum_eq(id!(SuperSaw)));
-        db.apply(id!(osc1.osc_type), ids!(osc1.hypersaw, visible), | v | v.enum_eq(id!(HyperSaw)));
-        db.apply(id!(osc2.osc_type), ids!(osc2.hypersaw, visible), | v | v.enum_eq(id!(HyperSaw)));
-        db.apply(id!(osc1.osc_type), ids!(osc1.harmonic, visible), | v | v.enum_eq(id!(HarmonicSeries)));
-        db.apply(id!(osc2.osc_type), ids!(osc2.harmonic, visible), | v | v.enum_eq(id!(HarmonicSeries)));
-        
-        db.apply(id!(mod_envelope.a), ids!(mod_env.display, draw_bg.attack), | v | v);
-        db.apply(id!(mod_envelope.h), ids!(mod_env.display, draw_bg.hold), | v | v);
-        db.apply(id!(mod_envelope.d), ids!(mod_env.display, draw_bg.decay), | v | v);
-        db.apply(id!(mod_envelope.s), ids!(mod_env.display, draw_bg.sustain), | v | v);
-        db.apply(id!(mod_envelope.r), ids!(mod_env.display, draw_bg.release), | v | v);
-        db.apply(id!(volume_envelope.a), ids!(vol_env.display, draw_bg.attack), | v | v);
-        db.apply(id!(volume_envelope.h), ids!(vol_env.display, draw_bg.hold), | v | v);
-        db.apply(id!(volume_envelope.d), ids!(vol_env.display, draw_bg.decay), | v | v);
-        db.apply(id!(volume_envelope.s), ids!(vol_env.display, draw_bg.sustain), | v | v);
-        db.apply(id!(volume_envelope.r), ids!(vol_env.display, draw_bg.release), | v | v);
-    }
-}
-
-impl AppMain for App {
+    
+    // This function is used to handle any incoming events from the host system. It is called
+    // automatically by the code we generated with the call to the macro `main_app` above.
     fn handle_event(&mut self, cx: &mut Cx, event: &Event) {
-        
-        let preset_lists = self.ui.get_swipe_list_set(ids!(preset_list));
         if let Event::Draw(event) = event {
-            let cx = &mut Cx2d::new(cx, event);
-            while let Some(next) = self.ui.draw_widget(cx).hook_widget() {
-                if let Some(mut list) = preset_lists.has_widget(&next).borrow_mut() {
-                    for i in 0..10 {
-                        if let Some(item) = list.get_entry(cx, LiveId(i as u64).into(), live_id!(Entry)) {
-                            item.get_button(id!(label)).set_label(&format!("Button id {i}"));
-                            item.draw_widget_all(cx);
-                        }
-                    }
-                }
-            }
-            return
-        }
-        let ui = self.ui.clone();
-        let mut synth_db = DataBindingStore::new();
-        let mut actions = ui.handle_widget_event(cx, event);
-        
-        // handle preset lists events
-        for list in preset_lists.iter() {
-            for item in list.items_with_actions(&actions).iter() {
-                // check for actions inside the list item
-                if item.get_button(id!(delete)).clicked(&actions) {
-                    // delete the item in the data
-                    list.redraw(cx); 
-                }
-            }
+            // This is a draw event, so create a draw context and use that to draw our application.
+            return self.ui.draw_widget_all(&mut Cx2d::new(cx, event));
         }
         
-        if let Event::Construct = event {
-            let ironfish = self.audio_graph.by_type::<IronFish>().unwrap();
-            synth_db.nodes = ironfish.settings.live_read();
-            ui.get_piano(id!(piano)).set_key_focus(cx);
-            self.midi_input = cx.midi_input();
+        // Forward the event to the frame. In this case, handle_event returns a list of actions.
+        // Actions are similar to events, except that events are always forwarded downward to child
+        // widgets, while actions are always returned back upwards to parent widgets.
+        let actions = self.ui.handle_widget_event(cx, event);
+        
+        // Get a reference to our button from the frame, and check if one of the actions returned by
+        // the frame was a notification that the button was clicked.
+        if self.ui.button(id!(button1)).clicked(&actions) {
+            //cx.spawn_async(Self::do_network_request(cx.get_ref(), self.ui.clone()))
+            // Increment the counter.
+            self.counter += 1;
+            
+            // Get a reference to our label from the frame, update its text, and schedule a redraw
+            // for it.
+            let label = self.ui.label(id!(label1));
+            label.set_text_and_redraw(cx,&format!("Counter: {}", self.counter));
         }
-        
-        if let Event::MidiPorts(ports) = event {
-            cx.use_midi_inputs(&ports.all_inputs());
-        }
-        
-        if let Event::AudioDevices(devices) = event {
-            cx.use_audio_outputs(&devices.default_output());
-        }
-        
-        ui.get_radio_button_set(ids!(
-            oscillators.tab1,
-            oscillators.tab2,
-        )).selected_to_visible(cx, &ui, &actions, ids!(
-            oscillators.osc1,
-            oscillators.osc2,
-        ));
-        
-        ui.get_radio_button_set(ids!(
-            filter_modes.tab1,
-            filter_modes.tab2,
-        )).selected_to_visible(cx, &ui, &actions, ids!(
-            preset_pages.tab1_frame,
-            preset_pages.tab2_frame,
-        ));
-        
-        ui.get_radio_button_set(ids!(
-            mobile_modes.tab1,
-            mobile_modes.tab2,
-            mobile_modes.tab3,
-        )).selected_to_visible(cx, &ui, &actions, ids!(
-            application_pages.tab1_frame,
-            application_pages.tab2_frame,
-            application_pages.tab3_frame,
-        ));
-        
-        let display_audio = ui.get_display_audio_set(ids!(display_audio));
-        
-        let mut buffers = 0;
-        self.audio_graph.handle_event_with(cx, event, &mut | cx, action | {
-            match action {
-                AudioGraphAction::DisplayAudio {buffer, voice, ..} => {
-                    display_audio.process_buffer(cx, None, voice, buffer, 1.0);
-                    buffers += 1;
-                }
-                AudioGraphAction::VoiceOff {voice} => {
-                    display_audio.voice_off(cx, voice);
-                }
-            };
-        });
-        
-        let piano = ui.get_piano_set(ids!(piano));
-        
-        while let Some((_, data)) = self.midi_input.receive() {
-            self.audio_graph.send_midi_data(data);
-            if let Some(note) = data.decode().on_note() {
-                piano.set_note(cx, note.is_on, note.note_number)
-            }
-        }
-        
-        for note in piano.notes_played(&actions) {
-            self.audio_graph.send_midi_data(MidiNote {
-                channel: 0,
-                is_on: note.is_on,
-                note_number: note.note_number,
-                velocity: note.velocity
-            }.into());
-        }
-        
-        if ui.get_button_set(ids!(panic)).clicked(&actions) {
-            cx.midi_reset();
-            self.audio_graph.all_notes_off();
-        }
-        
-        let sequencer = ui.get_sequencer(id!(sequencer));
-        // lets fetch and update the tick.
-        
-        if ui.get_button_set(ids!(clear_grid)).clicked(&actions) {
-            sequencer.clear_grid(cx, &mut actions);
-        }
-        
-        if ui.get_button_set(ids!(grid_down)).clicked(&actions) {
-            sequencer.grid_down(cx, &mut actions);
-        }
-        
-        if ui.get_button_set(ids!(grid_up)).clicked(&actions) {
-            sequencer.grid_up(cx, &mut actions);
-        }
-        
-        self.data_bind(synth_db.widgets_to_data(cx, &actions, &ui));
-        self.data_bind(synth_db.data_to_widgets(cx, &actions, &ui));
-        
-        let ironfish = self.audio_graph.by_type::<IronFish>().unwrap();
-        ironfish.settings.apply_over(cx, &synth_db.nodes);
     }
-    /*
-    pub fn preset(&mut self, cx: &mut Cx, index: usize, save: bool) {
-        let ironfish = self.audio_graph.by_type::<IronFish>().unwrap();
-        let file_name = format!("preset_{}.txt", index);
-        if save {
-            let nodes = ironfish.settings.live_read();
-            let data = nodes.to_cbor(0).unwrap();
-            let data = makepad_miniz::compress_to_vec(&data, 10);
-            let data = makepad_base64::base64_encode(&data, &makepad_base64::BASE64_URL_SAFE);
-            log!("Saving preset {}", file_name);
-            let mut file = File::create(&file_name).unwrap();
-            file.write_all(&data).unwrap();
-        }
-        else if let Ok(mut file) = File::open(&file_name) {
-            log!("Loading preset {}", file_name);
-            let mut data = Vec::new();
-            file.read_to_end(&mut data).unwrap();
-            if let Ok(data) = makepad_base64::base64_decode(&data) {
-                if let Ok(data) = makepad_miniz::decompress_to_vec(&data) {
-                    let mut nodes = Vec::new();
-                    nodes.from_cbor(&data).unwrap();
-                    ironfish.settings.apply_over(cx, &nodes);
-                    //self.imgui.root_frame().bind_read(cx, &nodes);
-                }
-                else {
-                    log!("Error decompressing preset");
-                }
-            }
-            else {
-                log!("Error base64 decoding preset");
-            }
-        }
-    }*/
-    
 }

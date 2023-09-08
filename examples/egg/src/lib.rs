@@ -1,14 +1,2 @@
-
-pub use makepad_audio_widgets;
-pub use makepad_audio_widgets::makepad_widgets;
-pub use makepad_widgets::makepad_platform;
-pub use makepad_platform::makepad_math;
-pub use makepad_synth_egg;
-pub use makepad_synth_egg::makepad_audio_graph;
-pub use makepad_widgets::makepad_draw;
-pub use makepad_platform::makepad_error_log;
-
+pub use makepad_widgets;
 pub mod app;
-mod sequencer;
-mod app_desktop;
-mod app_mobile;
